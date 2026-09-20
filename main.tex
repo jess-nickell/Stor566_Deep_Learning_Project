@@ -1,0 +1,150 @@
+% STOR 566 project proposal template.
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage[margin=0.8in,headheight=14pt]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{etoolbox}
+\usepackage{amsmath,amssymb}
+\usepackage[authoryear,round]{natbib}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+\urlstyle{same}
+
+\newcommand{\teamauthors}{}
+\newcommand{\groupnumber}{}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\setlength{\bibsep}{7pt}
+\titleformat{\section}{\large\bfseries}{}{0pt}{}
+\titlespacing*{\section}{0pt}{11pt}{5pt}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Project Proposal}
+\rhead{STOR 566\ifdefempty{\groupnumber}{}{ --- Group \groupnumber}}
+\cfoot{\thepage}
+\fancypagestyle{plain}{\fancyhf{}\cfoot{\thepage}\renewcommand{\headrulewidth}{0pt}}
+\hypersetup{pdftitle={Project Proposal}}
+
+\title{\vspace{-1.5em}\Large\bfseries Project Proposal\vspace{-0.5em}}
+\author{\teamauthors}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-2em}
+
+\section*{Problem Description}
+Brain tumors are an abnormal growth of cells in the brain that can be indicative of several severe underlying illnesses and have an array of serious 
+symptoms such as headaches, vision issues, speech issues, etc. Magnetic Resonance Imaging (MRI) is a significant part of the diagnostic process. 
+It produces 3D images of the brain and can help identify and diagnose brain tumors. The early identification of these brain tumors can have a direct 
+impact not only on the patient's estimated survival but also on treatment planning and tumor growth evaluation. Automated classification of brain 
+MRI images is a challenging image recognition task that requires classification between categories with similar visual 
+characteristics. Variations in tumor appearance and image quality can make accurate classification challenging. In terms of predictive accuracy, 
+computational requirements are an important consideration when selecting an appropriate deep learning model. These factors motivate a systematic 
+comparison of architectures with different approaches to how they extract and combine image features. This project addresses the classification of 
+two-dimensional brain MRI images into four categories: glioma, meningioma, pituitary tumor, and no tumor, using the 
+\href{https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset}{Brain Tumor MRI Dataset} containing 7,200 images.
+
+\section*{Related Work}
+Convolutional neural networks (CNNs) are widely used for image classification due to their capacity to learn hierarchical visual representations.
+Recent studies have shown that deep learning has achieved strong performance in brain tumor classification using MRI images. 
+\citet{mzoughi2020} proposed a multi-scale 3D convolutional neural network that uses volumetric MRI data to classify glioma tumors. 
+Their work demonstrated that 3D CNNs can effectively capture spatial information across MRI slices, but they also require more computational 
+resources. 
+
+\citet{he2016} introduced residual learning,
+which facilitates the optimization of deep networks through shortcut connections. This framework provides the foundation for ResNet-50,
+selected in the present study as an established CNN baseline. \citet{tan2019} proposed EfficientNet, a family of architectures developed by
+balancing network depth, width, and input resolution. EfficientNet-B0, one model of the family, is introduced to examine the trade-off between 
+classification performanceand computational cost within a compact convolutional architecture.
+
+Transformer architectures offer another approach to image classification by using attention to model relationships between image patches.
+\citet{touvron2021} introduced Data-Efficient Image Transformers (DeiT), which shows competitive image classification performance through
+training on ImageNet without additional external training data. Pretrained DeiT-Small is included to investigate performance of a vision
+Transformer as an alternative to convolutional feature extraction for brain MRI classification tasks.
+
+\citet{liu2021} proposed Swin Transformer, which constructs hierarchical representations using self-attention within local windows.
+The shifted-window mechanism enables information exchange across window boundaries, while the hierarchical architecture supports feature
+representation at multiple spatial scales. Swin-Tiny is included to examine whether this attention structure offers advantages over the global
+attention employed by DeiT-Small for the selected classification task.
+
+\section*{Proposed Work}
+\setlength{\emergencystretch}{2em}
+Inspired by these architectural developments, our project aims to compare pretrained ResNet-50, \mbox{EfficientNet-B0}, DeiT-Small, and Swin-Tiny
+in classification performance and computational efficiency on the brain tumor dataset. We will explore the strengths and limitations of
+models and identify trade-offs between predictive performance and computational cost. Although these foundational studies demonstrate
+the models' capabilities on general image recognition tasks, their relative performance on the MRI dataset remains unknown. In our
+experiment, ResNet-50 and EfficientNet-B0 represent convolutional architectures, while DeiT-Small and Swin-Tiny each represent global and
+hierarchical attention-based architectures. All models will be initialized using ImageNet-1K-pretrained weights and fine-tuned on the
+selected MRI dataset. The standard, non-distilled DeiT-Small configuration will be used. The original classification layer of each pretrained
+model will be replaced with a new layer containing 4 output units, corresponding to glioma, meningioma, pituitary tumor, and no tumor.
+
+Images will be resized to \(224 \times 224\) pixels and represented using three input channels. Normalization will follow the requirements
+of each pretrained model. An augmentation policy of rotations, translations, and zoom transformations will be applied to training images.
+We will use the dataset's existing training and test sets as the initial split, reserving 20\% of the training images for validation while
+preserving class proportions. Duplicate images across sets will be checked before training. All models will use identical data splits,
+the same number of hyperparameter trials, and three fixed random seeds.
+
+\section*{Evaluation Metric}
+Model performance will be evaluated on the held-out test set after hyperparameters and training checkpoints have been selected using the
+validation set. Macro-averaged F1 score (macro-F1) will serve as the primary evaluation metric since it combines precision and recall while
+assigning equal importance to all four classes. It is defined as
+\[
+\mathrm{Macro\text{-}F1}
+=\frac{1}{4}\sum_{c=1}^{4}
+\frac{2TP_c}{2TP_c+FP_c+FN_c},
+\]
+where \(TP_c\), \(FP_c\), and \(FN_c\) denote the numbers of true positives, false positives, and false negatives for class \(c\), respectively.
+
+Overall accuracy will measure the proportion of correctly classified images. Class-specific precision and recall will provide further insight
+into each model's performance. Specifically, precision measures the proportion of predictions for a class that are correct, and recall measures the
+proportion of images belonging to that class that are correctly identified. A confusion matrix normalized by true class will illustrate
+misclassification patterns across the four categories.
+
+Each model will be trained using three random seeds and identical data partitions. Classification metrics will be reported as the mean and
+standard deviation across these runs to shows variation due to training randomness.
+
+Computational efficiency will be evaluated using the total number of model parameters, average training time per epoch, and average inference
+time per image. These metrics measure model size, training speed, and prediction speed respectively. Runtime measurements will use the
+same hardware, input resolution, and numerical precision, with a common training batch size and an inference batch size of one.
+
+\clearpage
+\begingroup
+\renewcommand{\bibsection}{\section*{References}}
+\begin{thebibliography}{}
+
+\bibitem[He et~al.(2016)]{he2016}
+He, K., Zhang, X., Ren, S., \& Sun, J. (2016). Deep residual learning for image recognition.
+In 2016 IEEE Conference on Computer Vision and Pattern Recognition (CVPR) (pp. 770--778).
+IEEE. \url{https://doi.org/10.1109/CVPR.2016.90}
+
+\bibitem[Liu et~al.(2021)]{liu2021}
+Liu, Z., Lin, Y., Cao, Y., Hu, H., Wei, Y., Zhang, Z., Lin, S., \& Guo, B. (2021).
+Swin Transformer: Hierarchical vision transformer using shifted windows.
+In 2021 IEEE/CVF International Conference on Computer Vision (ICCV) (pp. 9992--10002).
+IEEE. \url{https://doi.org/10.1109/ICCV48922.2021.00986}
+
+\bibitem[Mzoughi et~al.(2020)]{mzoughi2020}
+Mzoughi, H., Njeh, I., Wali, A., Slima, M. B., BenHamida, A., Mhiri, C., \& Mahfoudhe, K. B. (2020).
+Deep multi-scale 3D convolutional neural network (CNN) for MRI gliomas brain tumor classification.
+Journal of Digital Imaging, 33(4), 903--915.
+\url{https://doi.org/10.1007/s10278-020-00347-9}
+
+\bibitem[Tan and Le(2019)]{tan2019}
+Tan, M., \& Le, Q. V. (2019). EfficientNet: Rethinking model scaling for convolutional neural networks.
+In K. Chaudhuri \& R. Salakhutdinov (Eds.), Proceedings of the 36th International Conference on Machine Learning
+(Vol. 97, pp. 6105--6114). PMLR. \url{https://proceedings.mlr.press/v97/tan19a.html}
+
+\bibitem[Touvron et~al.(2021)]{touvron2021}
+Touvron, H., Cord, M., Douze, M., Massa, F., Sablayrolles, A., \& J\'egou, H. (2021).
+Training data-efficient image transformers \& distillation through attention.
+In M. Meila \& T. Zhang (Eds.), Proceedings of the 38th International Conference on Machine Learning
+(Vol. 139, pp. 10347--10357). PMLR. \url{https://proceedings.mlr.press/v139/touvron21a.html}
+
+\end{thebibliography}
+\endgroup
+
+\end{document}
